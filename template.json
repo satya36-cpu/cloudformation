@@ -1,0 +1,411 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Create a vpc with 6 subnets",
+    "Parameters": {
+        "vpccidr": {
+            "Description": "this is cidr range of vpc ",
+            "Type": "String",
+            "Default": "10.10.0.0/16"
+        },
+        "subnetcidrs": {
+            "Description": "-",
+            "Type": "CommaDelimitedList",
+            "Default": "10.10.0.0/24,10.10.1.0/24,10.10.2.0/24,10.10.3.0/24,10.10.4.0/24,10.10.5.0/24"
+        },
+        "zone1": {
+            "Description": "This is zone 1 for 3 subnets",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+        "zone2": {
+            "Description": "This is zone 2 for 3 subnets",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        }
+    },
+    "Resources": {
+        "ntier": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Ref": "vpccidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "activity1-vpc"
+                    }
+                ]
+            }
+        },
+        "appsubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        0,
+                        {
+                            "Ref": "subnetcidrs"
+                        }
+                    ]
+                },
+                "AvailabilityZone": {
+                    "Ref": "zone1"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app1"
+                    }
+                ]
+            }
+        },
+        "appsubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        1,
+                        {
+                            "Ref": "subnetcidrs"
+                        }
+                    ]
+                },
+                "AvailabilityZone": {
+                    "Ref": "zone2"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app2"
+                    }
+                ]
+            }
+        },
+        "websubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        2,
+                        {
+                            "Ref": "subnetcidrs"
+                        }
+                    ]
+                },
+                "AvailabilityZone": {
+                    "Ref": "zone1"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web1"
+                    }
+                ]
+            }
+        },
+        "websubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        3,
+                        {
+                            "Ref": "subnetcidrs"
+                        }
+                    ]
+                },
+                "AvailabilityZone": {
+                    "Ref": "zone2"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web2"
+                    }
+                ]
+            }
+        },
+        "dbsubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        4,
+                        {
+                            "Ref": "subnetcidrs"
+                        }
+                    ]
+                },
+                "AvailabilityZone": {
+                    "Ref": "zone1"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db1"
+                    }
+                ]
+            }
+        },
+        "dbsubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        5,
+                        {
+                            "Ref": "subnetcidrs"
+                        }
+                    ]
+                },
+                "AvailabilityZone": {
+                    "Ref": "zone2"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db2"
+                    }
+                ]
+            }
+        },
+        "websecuritygroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "This is web sg",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "22",
+                        "FromPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "80",
+                        "FromPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "443",
+                        "FromPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "websg"
+                    }
+                ]
+            }
+        },
+        "appsecuritygroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "This is app security group",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "22",
+                        "FromPort": "22",
+                        "CidrIp": {
+                            "Ref": "vpccidr"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "8080",
+                        "FromPort": "8080",
+                        "CidrIp": {
+                            "Ref": "vpccidr"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "appsg"
+                    }
+                ]
+            }
+        },
+        "dbsecuritygroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "This is for mysql",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "3306",
+                        "FromPort": "3306",
+                        "CidrIp": {
+                            "Ref": "vpccidr"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "dbsg"
+                    }
+                ]
+            }
+        },
+        "ntierigw": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ntierigw"
+                    }
+                ]
+            }
+        },
+        "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "InternetGatewayId": {
+                    "Ref": "ntierigw"
+                }
+            }
+        },
+        "publicrt": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "publicrt"
+                    }
+                ]
+            }
+        },
+        "publicrtigw": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "publicrt"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "ntierigw"
+                }
+            }
+        },
+        "privatert": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntier"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "privatert"
+                    }
+                ]
+            }
+        },
+        "publicweb1assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "websubnet1"
+                },
+                "RouteTableId": {
+                    "Ref": "publicrt"
+                }
+            }
+        },
+        "publicweb2assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "websubnet2"
+                },
+                "RouteTableId": {
+                    "Ref": "publicrt"
+                }
+            }
+        },
+        "privateapp1assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "appsubnet1"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "privateapp2assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "appsubnet2"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "privatedb1assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "dbsubnet1"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "privatedb2assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "dbsubnet2"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        }
+    }
+}
